@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { NotificationDrawer } from './components/NotificationDrawer';
 import { AuthModal } from './pages/AuthModal';
+import { HomeView } from './pages/HomeView';
 import { DashboardView } from './pages/DashboardView';
 import { FarmView } from './pages/FarmView';
 import { MarketView } from './pages/MarketView';
@@ -26,7 +27,7 @@ export const App: React.FC = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
-  // Initialize session and load data
+  // Initialize session from storage
   useEffect(() => {
     const savedUser = authStorage.getUser();
     if (savedUser) {
@@ -34,9 +35,8 @@ export const App: React.FC = () => {
       if (savedUser.preferredLanguage) {
         setLanguage(savedUser.preferredLanguage as Language);
       }
+      loadInitialData(savedUser);
     }
-
-    loadInitialData();
   }, []);
 
   // Reload market and recommendations when commodity changes
@@ -46,9 +46,11 @@ export const App: React.FC = () => {
     }
   }, [selectedCommodity]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = async (activeUser?: User | null) => {
     try {
-      // 1. Get farm
+      const targetUser = activeUser !== undefined ? activeUser : user;
+      
+      // 1. Get farm (backend handles demo vs real user based on auth token)
       const farmRes = await api.getFarm().catch(() => null);
       const activeFarm = farmRes?.farm || {
         id: 'demo-farm',
@@ -168,15 +170,64 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleEnterDemo = async () => {
+    try {
+      const res = await api.demoLogin();
+      authStorage.setToken(res.token);
+      authStorage.setUser(res.user);
+      setUser(res.user);
+      await loadInitialData(res.user);
+    } catch {
+      const demoUser: User = {
+        id: 'demo-user-suresh',
+        name: 'Suresh Patil',
+        phoneOrEmail: 'demo@kisanwise.org',
+        preferredLanguage: language,
+        isDemo: true
+      };
+      authStorage.setToken('demo-jwt-token-active');
+      authStorage.setUser(demoUser);
+      setUser(demoUser);
+      await loadInitialData(demoUser);
+    }
+  };
+
+  const handleAuthSuccess = async (loggedUser: User) => {
+    setUser(loggedUser);
+    await loadInitialData(loggedUser);
+  };
+
   const handleLogout = () => {
     authStorage.removeToken();
     authStorage.removeUser();
     setUser(null);
+    setFarm(null);
   };
 
   const handleMarkAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
+
+  // If user is not logged in or in demo mode, show Home Page
+  if (!user) {
+    return (
+      <>
+        <HomeView
+          onEnterDemo={handleEnterDemo}
+          onOpenAuth={() => setIsAuthOpen(true)}
+          language={language}
+          onLanguageChange={setLanguage}
+        />
+
+        <AuthModal
+          isOpen={isAuthOpen}
+          onClose={() => setIsAuthOpen(false)}
+          onSuccess={handleAuthSuccess}
+          language={language}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col antialiased">
@@ -190,7 +241,28 @@ export const App: React.FC = () => {
         onOpenNotifications={() => setIsNotifOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
         onLogout={handleLogout}
+        onGoHome={handleLogout}
       />
+
+      {/* Demo Sandbox Alert Banner */}
+      {user?.isDemo && (
+        <div className="max-w-md sm:max-w-xl mx-auto w-full px-4 pt-3">
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs animate-fade-in shadow-xs">
+            <div className="flex items-center gap-2 text-amber-900">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+              <span className="font-semibold text-[11px] sm:text-xs">
+                Demo Sandbox Mode: Edits are isolated and won't affect real accounts.
+              </span>
+            </div>
+            <button
+              onClick={() => setIsAuthOpen(true)}
+              className="text-[11px] sm:text-xs font-bold text-amber-900 hover:underline shrink-0 ml-2 cursor-pointer"
+            >
+              Sign In to Save
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main View Container */}
       <main className="flex-1 max-w-md sm:max-w-xl mx-auto w-full px-4 pt-4">
@@ -251,7 +323,7 @@ export const App: React.FC = () => {
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
-        onSuccess={(loggedUser) => setUser(loggedUser)}
+        onSuccess={handleAuthSuccess}
         language={language}
       />
 
@@ -264,4 +336,5 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
 export default App;

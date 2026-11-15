@@ -73,6 +73,27 @@ async def get_farm(user: Optional[Dict[str, Any]] = Depends(get_current_user)):
             if f.get("userId") == user_id:
                 return {"success": True, "farm": f}
 
+    # If this is an authenticated real farmer who doesn't have a farm yet, create their private farm
+    if user and user_id != "demo-user-suresh":
+        user_name = user.get("name", "Farmer")
+        new_farm = dict(DEFAULT_DEMO_FARM)
+        new_farm["id"] = f"farm-{user_id[:8]}"
+        new_farm["userId"] = user_id
+        new_farm["name"] = f"{user_name}'s Farm"
+        if db_manager.is_connected and db_manager.db is not None:
+            await db_manager.db.farms.insert_one(dict(new_farm))
+            new_farm.pop("_id", None)
+        else:
+            db_manager._memory_store["farms"].append(new_farm)
+        return {"success": True, "farm": new_farm}
+
+    return {"success": True, "farm": DEFAULT_DEMO_FARM}
+
+@router.post("/reset-demo")
+async def reset_demo_farm():
+    """Resets the demo sandbox back to baseline defaults without touching any real user accounts"""
+    if db_manager.is_connected and db_manager.db is not None:
+        await db_manager.db.farms.delete_one({"userId": "demo-user-suresh"})
     return {"success": True, "farm": DEFAULT_DEMO_FARM}
 
 @router.post("")

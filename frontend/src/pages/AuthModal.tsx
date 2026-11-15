@@ -54,17 +54,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleDemoLogin = () => {
-    const demoUser: User = {
-      id: 'demo-user-suresh',
-      name: 'Suresh Patil',
-      phoneOrEmail: '9876543210',
-      preferredLanguage: language
-    };
-    authStorage.setToken('demo-jwt-token-active');
-    authStorage.setUser(demoUser);
-    onSuccess(demoUser);
-    onClose();
+  const handleDemoLogin = async () => {
+    try {
+      const res = await api.demoLogin();
+      authStorage.setToken(res.token);
+      authStorage.setUser(res.user);
+      onSuccess(res.user);
+      onClose();
+    } catch {
+      const demoUser: User = {
+        id: 'demo-user-suresh',
+        name: 'Suresh Patil',
+        phoneOrEmail: 'demo@kisanwise.org',
+        preferredLanguage: language,
+        isDemo: true
+      };
+      authStorage.setToken('demo-jwt-token-active');
+      authStorage.setUser(demoUser);
+      onSuccess(demoUser);
+      onClose();
+    }
   };
 
   return (

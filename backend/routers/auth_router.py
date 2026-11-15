@@ -49,7 +49,7 @@ async def register(req: RegisterRequest):
     else:
         db_manager._memory_store["users"].append(user_doc)
 
-    token = create_access_token({"sub": user_id, "name": req.name})
+    token = create_access_token({"sub": user_id, "name": req.name, "isDemo": False})
     return {
         "success": True,
         "token": token,
@@ -57,7 +57,8 @@ async def register(req: RegisterRequest):
             "id": user_id,
             "name": req.name,
             "phoneOrEmail": identifier,
-            "preferredLanguage": req.preferredLanguage
+            "preferredLanguage": req.preferredLanguage,
+            "isDemo": False
         }
     }
 
@@ -80,10 +81,11 @@ async def login(req: LoginRequest):
             demo_user = {
                 "id": "demo-user-suresh",
                 "name": "Suresh Patil",
-                "phoneOrEmail": identifier,
-                "preferredLanguage": "mr"
+                "phoneOrEmail": "demo@kisanwise.org",
+                "preferredLanguage": "mr",
+                "isDemo": True
             }
-            token = create_access_token({"sub": demo_user["id"], "name": demo_user["name"]})
+            token = create_access_token({"sub": demo_user["id"], "name": demo_user["name"], "isDemo": True})
             return {"success": True, "token": token, "user": demo_user}
         raise HTTPException(status_code=401, detail="Invalid phone number/email or password")
 
@@ -91,7 +93,7 @@ async def login(req: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid phone number/email or password")
 
     user_id = str(user.get("_id") or user.get("id"))
-    token = create_access_token({"sub": user_id, "name": user.get("name")})
+    token = create_access_token({"sub": user_id, "name": user.get("name"), "isDemo": False})
     return {
         "success": True,
         "token": token,
@@ -99,9 +101,23 @@ async def login(req: LoginRequest):
             "id": user_id,
             "name": user.get("name"),
             "phoneOrEmail": user.get("phoneOrEmail"),
-            "preferredLanguage": user.get("preferredLanguage", "mr")
+            "preferredLanguage": user.get("preferredLanguage", "mr"),
+            "isDemo": False
         }
     }
+
+@router.post("/demo")
+async def demo_session():
+    """Explicit endpoint for starting an isolated demo sandbox session"""
+    demo_user = {
+        "id": "demo-user-suresh",
+        "name": "Suresh Patil",
+        "phoneOrEmail": "demo@kisanwise.org",
+        "preferredLanguage": "mr",
+        "isDemo": True
+    }
+    token = create_access_token({"sub": demo_user["id"], "name": demo_user["name"], "isDemo": True})
+    return {"success": True, "token": token, "user": demo_user}
 
 @router.get("/me")
 async def get_profile(user: Dict[str, Any] = Depends(require_current_user)):

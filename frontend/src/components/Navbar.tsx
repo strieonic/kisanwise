@@ -12,6 +12,7 @@ interface NavbarProps {
   onOpenNotifications: () => void;
   onOpenAuth: () => void;
   onLogout: () => void;
+  onGoHome?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,7 +23,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   notifications,
   onOpenNotifications,
   onOpenAuth,
-  onLogout
+  onLogout,
+  onGoHome
 }) => {
   const t = translations[language];
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -31,22 +33,33 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border shadow-xs">
       <div className="max-w-4xl mx-auto px-4 h-15 flex items-center justify-between">
         {/* Brand */}
-        <div className="flex items-center gap-2.5">
+        <button 
+          type="button"
+          onClick={onGoHome}
+          className="flex items-center gap-2.5 text-left cursor-pointer hover:opacity-90 transition-opacity"
+          title="Return to Home"
+        >
           <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-xl shadow-xs">
             🌱
           </div>
           <div>
             <h1 className="font-outfit font-bold text-lg text-primary leading-tight tracking-tight flex items-center gap-1.5">
               {t.appName}
-              <span className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/20">
-                PRO
-              </span>
+              {user?.isDemo ? (
+                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+                  DEMO
+                </span>
+              ) : (
+                <span className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/20">
+                  PRO
+                </span>
+              )}
             </h1>
             <p className="text-[11px] text-muted-foreground font-medium truncate max-w-[150px] sm:max-w-none">
               {farm ? `${farm.name} • ${farm.district}` : t.tagline}
             </p>
           </div>
-        </div>
+        </button>
 
         {/* Right actions */}
         <div className="flex items-center gap-2">

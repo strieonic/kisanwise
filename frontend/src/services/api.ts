@@ -57,6 +57,11 @@ export const api = {
       body: JSON.stringify({ name, phoneOrEmail, password, preferredLanguage })
     });
   },
+  demoLogin: async () => {
+    return apiFetch<{ success: boolean; token: string; user: User }>('/api/auth/demo', {
+      method: 'POST'
+    });
+  },
   getProfile: async () => {
     return apiFetch<User>('/api/auth/me');
   },
@@ -64,6 +69,11 @@ export const api = {
   // Farm
   getFarm: async () => {
     return apiFetch<{ success: boolean; farm: Farm }>('/api/farms');
+  },
+  resetDemoFarm: async () => {
+    return apiFetch<{ success: boolean; farm: Farm }>('/api/farms/reset-demo', {
+      method: 'POST'
+    });
   },
   saveFarm: async (farm: Partial<Farm>) => {
     return apiFetch<{ success: boolean; farm: Farm }>('/api/farms', {
