@@ -1,0 +1,10 @@
+# Vercel Deployment Ignore
+archive/
+.agents/
+backend/__pycache__/
+backend/*/__pycache__/
+frontend/node_modules/
+*.log
+.git/
+.env.local
+run_app.ps1
