@@ -9,6 +9,7 @@ export interface LocationDetectionResult {
   lng: number;
   suggestedSoil: string;
   suggestedCrop: string;
+  suggestedIrrigation: string;
   displayName: string;
 }
 
@@ -36,54 +37,55 @@ const REGIONAL_AGRO_HUBS: Array<{
   lng: number;
   typicalSoil: string;
   popularCrop: string;
+  typicalIrrigation: string;
 }> = [
   // Maharashtra
-  { district: 'Latur', state: 'Maharashtra', lat: 18.4088, lng: 76.5604, typicalSoil: 'black', popularCrop: 'soybean' },
-  { district: 'Satara', state: 'Maharashtra', lat: 17.6805, lng: 74.0183, typicalSoil: 'red_sandy_loam', popularCrop: 'sugarcane' },
-  { district: 'Solapur', state: 'Maharashtra', lat: 17.6599, lng: 75.9064, typicalSoil: 'black', popularCrop: 'onion' },
-  { district: 'Pune', state: 'Maharashtra', lat: 18.5204, lng: 73.8567, typicalSoil: 'loamy', popularCrop: 'onion' },
-  { district: 'Nashik', state: 'Maharashtra', lat: 19.9975, lng: 73.7898, typicalSoil: 'black', popularCrop: 'onion' },
-  { district: 'Kolhapur', state: 'Maharashtra', lat: 16.7050, lng: 74.2433, typicalSoil: 'alluvial', popularCrop: 'sugarcane' },
-  { district: 'Nagpur', state: 'Maharashtra', lat: 21.1458, lng: 79.0882, typicalSoil: 'black', popularCrop: 'cotton' },
-  { district: 'Akola', state: 'Maharashtra', lat: 20.7002, lng: 77.0082, typicalSoil: 'black', popularCrop: 'cotton' },
-  { district: 'Amravati', state: 'Maharashtra', lat: 20.9374, lng: 77.7796, typicalSoil: 'black', popularCrop: 'soybean' },
-  { district: 'Nanded', state: 'Maharashtra', lat: 19.1383, lng: 77.3210, typicalSoil: 'black', popularCrop: 'tur' },
-  { district: 'Dharashiv', state: 'Maharashtra', lat: 18.1856, lng: 76.0419, typicalSoil: 'black', popularCrop: 'soybean' },
-  { district: 'Sangli', state: 'Maharashtra', lat: 16.8524, lng: 74.5815, typicalSoil: 'loamy', popularCrop: 'sugarcane' },
+  { district: 'Latur', state: 'Maharashtra', lat: 18.4088, lng: 76.5604, typicalSoil: 'black', popularCrop: 'soybean', typicalIrrigation: 'rainfed' },
+  { district: 'Satara', state: 'Maharashtra', lat: 17.6805, lng: 74.0183, typicalSoil: 'red_sandy_loam', popularCrop: 'sugarcane', typicalIrrigation: 'drip' },
+  { district: 'Solapur', state: 'Maharashtra', lat: 17.6599, lng: 75.9064, typicalSoil: 'black', popularCrop: 'onion', typicalIrrigation: 'drip' },
+  { district: 'Pune', state: 'Maharashtra', lat: 18.5204, lng: 73.8567, typicalSoil: 'loamy', popularCrop: 'onion', typicalIrrigation: 'drip' },
+  { district: 'Nashik', state: 'Maharashtra', lat: 19.9975, lng: 73.7898, typicalSoil: 'black', popularCrop: 'onion', typicalIrrigation: 'drip' },
+  { district: 'Kolhapur', state: 'Maharashtra', lat: 16.7050, lng: 74.2433, typicalSoil: 'alluvial', popularCrop: 'sugarcane', typicalIrrigation: 'canal' },
+  { district: 'Nagpur', state: 'Maharashtra', lat: 21.1458, lng: 79.0882, typicalSoil: 'black', popularCrop: 'cotton', typicalIrrigation: 'borewell' },
+  { district: 'Akola', state: 'Maharashtra', lat: 20.7002, lng: 77.0082, typicalSoil: 'black', popularCrop: 'cotton', typicalIrrigation: 'rainfed' },
+  { district: 'Amravati', state: 'Maharashtra', lat: 20.9374, lng: 77.7796, typicalSoil: 'black', popularCrop: 'soybean', typicalIrrigation: 'rainfed' },
+  { district: 'Nanded', state: 'Maharashtra', lat: 19.1383, lng: 77.3210, typicalSoil: 'black', popularCrop: 'tur', typicalIrrigation: 'rainfed' },
+  { district: 'Dharashiv', state: 'Maharashtra', lat: 18.1856, lng: 76.0419, typicalSoil: 'black', popularCrop: 'soybean', typicalIrrigation: 'rainfed' },
+  { district: 'Sangli', state: 'Maharashtra', lat: 16.8524, lng: 74.5815, typicalSoil: 'loamy', popularCrop: 'sugarcane', typicalIrrigation: 'drip' },
 
   // Tamil Nadu
-  { district: 'Thanjavur', state: 'Tamil Nadu', lat: 10.7870, lng: 79.1378, typicalSoil: 'clay_paddy', popularCrop: 'paddy' },
-  { district: 'Erode', state: 'Tamil Nadu', lat: 11.3410, lng: 77.7172, typicalSoil: 'red_sandy_loam', popularCrop: 'turmeric' },
-  { district: 'Madurai', state: 'Tamil Nadu', lat: 9.9252, lng: 78.1198, typicalSoil: 'red_sandy_loam', popularCrop: 'paddy' },
-  { district: 'Coimbatore', state: 'Tamil Nadu', lat: 11.0168, lng: 76.9558, typicalSoil: 'red_sandy_loam', popularCrop: 'cotton' },
-  { district: 'Salem', state: 'Tamil Nadu', lat: 11.6643, lng: 78.1460, typicalSoil: 'red_sandy_loam', popularCrop: 'turmeric' },
-  { district: 'Tirunelveli', state: 'Tamil Nadu', lat: 8.7139, lng: 77.7567, typicalSoil: 'alluvial', popularCrop: 'paddy' },
+  { district: 'Thanjavur', state: 'Tamil Nadu', lat: 10.7870, lng: 79.1378, typicalSoil: 'clay_paddy', popularCrop: 'paddy', typicalIrrigation: 'flooded_paddy' },
+  { district: 'Erode', state: 'Tamil Nadu', lat: 11.3410, lng: 77.7172, typicalSoil: 'red_sandy_loam', popularCrop: 'turmeric', typicalIrrigation: 'drip' },
+  { district: 'Madurai', state: 'Tamil Nadu', lat: 9.9252, lng: 78.1198, typicalSoil: 'red_sandy_loam', popularCrop: 'paddy', typicalIrrigation: 'tank_irrigation' },
+  { district: 'Coimbatore', state: 'Tamil Nadu', lat: 11.0168, lng: 76.9558, typicalSoil: 'red_sandy_loam', popularCrop: 'cotton', typicalIrrigation: 'drip' },
+  { district: 'Salem', state: 'Tamil Nadu', lat: 11.6643, lng: 78.1460, typicalSoil: 'red_sandy_loam', popularCrop: 'turmeric', typicalIrrigation: 'drip' },
+  { district: 'Tirunelveli', state: 'Tamil Nadu', lat: 8.7139, lng: 77.7567, typicalSoil: 'alluvial', popularCrop: 'paddy', typicalIrrigation: 'canal' },
 
   // Andhra Pradesh
-  { district: 'Guntur', state: 'Andhra Pradesh', lat: 16.3067, lng: 80.4365, typicalSoil: 'red_sandy_loam', popularCrop: 'chilli' },
-  { district: 'Kurnool', state: 'Andhra Pradesh', lat: 15.8281, lng: 78.0373, typicalSoil: 'black', popularCrop: 'groundnut' },
-  { district: 'Krishna', state: 'Andhra Pradesh', lat: 16.1875, lng: 81.1389, typicalSoil: 'clay_paddy', popularCrop: 'paddy' },
-  { district: 'East Godavari', state: 'Andhra Pradesh', lat: 17.0005, lng: 81.8040, typicalSoil: 'alluvial', popularCrop: 'paddy' },
-  { district: 'Anantapur', state: 'Andhra Pradesh', lat: 14.6819, lng: 77.6006, typicalSoil: 'red_sandy_loam', popularCrop: 'groundnut' },
+  { district: 'Guntur', state: 'Andhra Pradesh', lat: 16.3067, lng: 80.4365, typicalSoil: 'red_sandy_loam', popularCrop: 'chilli', typicalIrrigation: 'drip' },
+  { district: 'Kurnool', state: 'Andhra Pradesh', lat: 15.8281, lng: 78.0373, typicalSoil: 'black', popularCrop: 'groundnut', typicalIrrigation: 'borewell' },
+  { district: 'Krishna', state: 'Andhra Pradesh', lat: 16.1875, lng: 81.1389, typicalSoil: 'clay_paddy', popularCrop: 'paddy', typicalIrrigation: 'flooded_paddy' },
+  { district: 'East Godavari', state: 'Andhra Pradesh', lat: 17.0005, lng: 81.8040, typicalSoil: 'alluvial', popularCrop: 'paddy', typicalIrrigation: 'canal' },
+  { district: 'Anantapur', state: 'Andhra Pradesh', lat: 14.6819, lng: 77.6006, typicalSoil: 'red_sandy_loam', popularCrop: 'groundnut', typicalIrrigation: 'borewell' },
 
   // Telangana
-  { district: 'Warangal', state: 'Telangana', lat: 17.9689, lng: 79.5941, typicalSoil: 'clay_paddy', popularCrop: 'paddy' },
-  { district: 'Nizamabad', state: 'Telangana', lat: 18.6725, lng: 78.0941, typicalSoil: 'red_sandy_loam', popularCrop: 'turmeric' },
-  { district: 'Khammam', state: 'Telangana', lat: 17.2473, lng: 80.1514, typicalSoil: 'alluvial', popularCrop: 'cotton' },
-  { district: 'Karimnagar', state: 'Telangana', lat: 18.4386, lng: 79.1288, typicalSoil: 'clay_paddy', popularCrop: 'paddy' },
+  { district: 'Warangal', state: 'Telangana', lat: 17.9689, lng: 79.5941, typicalSoil: 'clay_paddy', popularCrop: 'paddy', typicalIrrigation: 'flooded_paddy' },
+  { district: 'Nizamabad', state: 'Telangana', lat: 18.6725, lng: 78.0941, typicalSoil: 'red_sandy_loam', popularCrop: 'turmeric', typicalIrrigation: 'drip' },
+  { district: 'Khammam', state: 'Telangana', lat: 17.2473, lng: 80.1514, typicalSoil: 'alluvial', popularCrop: 'cotton', typicalIrrigation: 'borewell' },
+  { district: 'Karimnagar', state: 'Telangana', lat: 18.4386, lng: 79.1288, typicalSoil: 'clay_paddy', popularCrop: 'paddy', typicalIrrigation: 'canal' },
 
   // Karnataka
-  { district: 'Shivamogga', state: 'Karnataka', lat: 13.9299, lng: 75.5681, typicalSoil: 'red_sandy_loam', popularCrop: 'ragi' },
-  { district: 'Raichur', state: 'Karnataka', lat: 16.2076, lng: 77.3463, typicalSoil: 'black', popularCrop: 'paddy' },
-  { district: 'Mandya', state: 'Karnataka', lat: 12.5218, lng: 76.8951, typicalSoil: 'clay_paddy', popularCrop: 'paddy' },
-  { district: 'Belagavi', state: 'Karnataka', lat: 15.8497, lng: 74.4977, typicalSoil: 'black', popularCrop: 'sugarcane' },
-  { district: 'Dharwad', state: 'Karnataka', lat: 15.4589, lng: 75.0078, typicalSoil: 'black', popularCrop: 'cotton' },
+  { district: 'Shivamogga', state: 'Karnataka', lat: 13.9299, lng: 75.5681, typicalSoil: 'red_sandy_loam', popularCrop: 'ragi', typicalIrrigation: 'tank_irrigation' },
+  { district: 'Raichur', state: 'Karnataka', lat: 16.2076, lng: 77.3463, typicalSoil: 'black', popularCrop: 'paddy', typicalIrrigation: 'canal' },
+  { district: 'Mandya', state: 'Karnataka', lat: 12.5218, lng: 76.8951, typicalSoil: 'clay_paddy', popularCrop: 'paddy', typicalIrrigation: 'flooded_paddy' },
+  { district: 'Belagavi', state: 'Karnataka', lat: 15.8497, lng: 74.4977, typicalSoil: 'black', popularCrop: 'sugarcane', typicalIrrigation: 'drip' },
+  { district: 'Dharwad', state: 'Karnataka', lat: 15.4589, lng: 75.0078, typicalSoil: 'black', popularCrop: 'cotton', typicalIrrigation: 'borewell' },
 
   // North & Central India
-  { district: 'Ludhiana', state: 'Punjab', lat: 30.9010, lng: 75.8573, typicalSoil: 'alluvial', popularCrop: 'wheat' },
-  { district: 'Karnal', state: 'Haryana', lat: 29.6857, lng: 76.9905, typicalSoil: 'alluvial', popularCrop: 'paddy' },
-  { district: 'Indore', state: 'Madhya Pradesh', lat: 22.7196, lng: 75.8577, typicalSoil: 'black', popularCrop: 'soybean' },
-  { district: 'Rajkot', state: 'Gujarat', lat: 22.3039, lng: 70.8022, typicalSoil: 'black', popularCrop: 'groundnut' }
+  { district: 'Ludhiana', state: 'Punjab', lat: 30.9010, lng: 75.8573, typicalSoil: 'alluvial', popularCrop: 'wheat', typicalIrrigation: 'canal' },
+  { district: 'Karnal', state: 'Haryana', lat: 29.6857, lng: 76.9905, typicalSoil: 'alluvial', popularCrop: 'paddy', typicalIrrigation: 'flooded_paddy' },
+  { district: 'Indore', state: 'Madhya Pradesh', lat: 22.7196, lng: 75.8577, typicalSoil: 'black', popularCrop: 'soybean', typicalIrrigation: 'rainfed' },
+  { district: 'Rajkot', state: 'Gujarat', lat: 22.3039, lng: 70.8022, typicalSoil: 'black', popularCrop: 'groundnut', typicalIrrigation: 'drip' }
 ];
 
 // Distance calculation
@@ -126,32 +128,34 @@ export function calculateDynamicNdvi(
   else if (lat >= 14.0 && lat <= 20.0 && lng >= 75.5 && lng <= 78.5) {
     baseIndex = 0.62;
   }
+  // Dry western zones (Gujarat / Rajasthan)
+  else if (lng < 74.0 && lat > 21.0) {
+    baseIndex = 0.58;
+  }
 
-  // Smooth micro-spatial harmonic variation (reflects real field topography)
-  const spatialHarmonic = Math.sin(lat * 18.7) * Math.cos(lng * 14.3) * 0.05;
-  baseIndex += spatialHarmonic;
+  // Micro-variations based on coordinates to make every point unique
+  const microVariance = (Math.sin(lat * 14.2) * Math.cos(lng * 9.8)) * 0.05;
+  baseIndex += microVariance;
 
   // Soil modifier
-  const soil = (soilType || 'black').toLowerCase();
-  if (soil === 'clay_paddy' || soil === 'alluvial') {
-    baseIndex += 0.05;
-  } else if (soil === 'black' || soil === 'loamy') {
-    baseIndex += 0.02;
-  } else if (soil === 'sandy' || soil === 'laterite') {
-    baseIndex -= 0.06;
-  }
+  const s = (soilType || '').toLowerCase();
+  if (s.includes('clay') || s.includes('paddy')) baseIndex += 0.06;
+  else if (s.includes('black') || s.includes('alluvial')) baseIndex += 0.04;
+  else if (s.includes('sandy')) baseIndex -= 0.05;
+  else if (s.includes('laterite')) baseIndex -= 0.03;
 
   // Irrigation modifier
-  const irrig = (irrigationType || 'rainfed').toLowerCase();
-  if (irrig === 'drip' || irrig === 'flooded_paddy') {
-    baseIndex += 0.06;
-  } else if (irrig === 'sprinkler' || irrig === 'canal') {
-    baseIndex += 0.04;
-  } else if (irrig === 'borewell' || irrig === 'well') {
-    baseIndex += 0.02;
-  } else if (irrig === 'rainfed') {
-    baseIndex -= 0.04;
-  }
+  const ir = (irrigationType || '').toLowerCase();
+  if (ir.includes('drip') || ir.includes('flooded')) baseIndex += 0.08;
+  else if (ir.includes('sprinkler') || ir.includes('canal')) baseIndex += 0.05;
+  else if (ir.includes('borewell') || ir.includes('well')) baseIndex += 0.03;
+  else if (ir.includes('rainfed')) baseIndex -= 0.02;
+
+  // Crop canopy density modifier
+  const c = (crop || '').toLowerCase();
+  if (c.includes('sugarcane') || c.includes('paddy') || c.includes('rice')) baseIndex += 0.07;
+  else if (c.includes('turmeric') || c.includes('cotton')) baseIndex += 0.03;
+  else if (c.includes('onion') || c.includes('gram')) baseIndex -= 0.04;
 
   // Clamp within 0.28 to 0.92
   const ndviValue = Math.min(0.92, Math.max(0.28, Math.round(baseIndex * 100) / 100));
@@ -229,7 +233,7 @@ export async function detectLocationFromCoords(lat: number, lng: number): Promis
     }
   }
 
-  // Attempt live reverse geocoding via OpenStreetMap Nominatim with 3s timeout
+  // Attempt live reverse geocoding via OpenStreetMap Nominatim with 2.8s timeout
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2800);
@@ -260,6 +264,7 @@ export async function detectLocationFromCoords(lat: number, lng: number): Promis
         lng,
         suggestedSoil: nearest.typicalSoil,
         suggestedCrop: nearest.popularCrop,
+        suggestedIrrigation: nearest.typicalIrrigation,
         displayName: `${village}, ${district}, ${state}`
       };
     }
@@ -275,6 +280,7 @@ export async function detectLocationFromCoords(lat: number, lng: number): Promis
     lng,
     suggestedSoil: nearest.typicalSoil,
     suggestedCrop: nearest.popularCrop,
+    suggestedIrrigation: nearest.typicalIrrigation,
     displayName: `${nearest.district}, ${nearest.state}`
   };
 }
@@ -295,6 +301,7 @@ export async function searchPlaces(query: string): Promise<LocationDetectionResu
     lng: h.lng,
     suggestedSoil: h.typicalSoil,
     suggestedCrop: h.popularCrop,
+    suggestedIrrigation: h.typicalIrrigation,
     displayName: `${h.district}, ${h.state}`
   }));
 
@@ -343,22 +350,23 @@ export async function searchPlaces(query: string): Promise<LocationDetectionResu
           lng,
           suggestedSoil: nearestHub.typicalSoil,
           suggestedCrop: nearestHub.popularCrop,
-          displayName: item.display_name.split(',').slice(0, 3).join(',')
+          suggestedIrrigation: nearestHub.typicalIrrigation,
+          displayName: `${village}, ${district}, ${state}`
         };
       });
 
-      // Merge and deduplicate
-      const combined = [...onlineResults];
-      for (const loc of localMatches) {
-        if (!combined.some(c => Math.abs(c.lat - loc.lat) < 0.1 && Math.abs(c.lng - loc.lng) < 0.1)) {
-          combined.push(loc);
-        }
-      }
-      return combined.slice(0, 6);
+      // Deduplicate by displayName
+      const combined = [...localMatches, ...onlineResults];
+      const seen = new Set<string>();
+      return combined.filter(item => {
+        if (seen.has(item.displayName)) return false;
+        seen.add(item.displayName);
+        return true;
+      });
     }
   } catch (e) {
-    // Return local matches if offline
+    // Return local matches on network failure
   }
 
-  return localMatches.slice(0, 6);
+  return localMatches;
 }

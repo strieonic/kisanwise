@@ -51,6 +51,7 @@ export const App: React.FC = () => {
       const targetUser = activeUser !== undefined ? activeUser : user;
       const isDemoSession = targetUser?.isDemo ?? (!targetUser);
       
+      const todayDateStr = new Date().toISOString().split('T')[0];
       const defaultFarm: Farm = isDemoSession
         ? {
             id: 'demo-farm',
@@ -63,7 +64,7 @@ export const App: React.FC = () => {
             lat: 18.2333,
             lng: 76.7167,
             areaHectares: 3.5,
-            sowingDate: '2026-06-20',
+            sowingDate: todayDateStr,
             soilType: 'black',
             irrigationType: 'rainfed',
             inputCostPerHa: 18000,
@@ -131,7 +132,7 @@ export const App: React.FC = () => {
         yieldQPerHa: currentFarm?.expectedYieldQPerHa,
         soilType: currentFarm?.soilType || 'black',
         irrigationType: currentFarm?.irrigationType || 'rainfed',
-        sowingDate: currentFarm?.sowingDate || '2026-06-20',
+        sowingDate: currentFarm?.sowingDate || new Date().toISOString().split('T')[0],
         lat,
         lng,
         inputCostTotal: (currentFarm?.areaHectares || 3.5) * (currentFarm?.inputCostPerHa || 18000)
@@ -158,7 +159,7 @@ export const App: React.FC = () => {
             lat: 18.2333,
             lng: 76.7167,
             areaHectares: 3.5,
-            sowingDate: '2026-06-20',
+            sowingDate: new Date().toISOString().split('T')[0],
             soilType: 'black',
             irrigationType: 'rainfed',
             inputCostPerHa: 18000,

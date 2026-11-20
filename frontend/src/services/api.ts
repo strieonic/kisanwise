@@ -116,7 +116,7 @@ export const api = {
         yieldQPerHa: params.yieldQPerHa,
         soilType: params.soilType || 'black',
         irrigationType: params.irrigationType || 'rainfed',
-        sowingDate: params.sowingDate || '2026-06-20',
+        sowingDate: params.sowingDate || new Date().toISOString().split('T')[0],
         lat: params.lat,
         lng: params.lng,
         inputCostTotal: params.inputCostTotal

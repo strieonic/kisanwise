@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
+from datetime import datetime, timedelta
 from backend.database import db_manager
 from backend.auth import get_current_user
 from backend.services.recommendation_engine import calculate_agronomic_yield
@@ -19,7 +20,7 @@ class FarmModel(BaseModel):
     lat: float = 18.2333
     lng: float = 76.7167
     areaHectares: float = 3.5
-    sowingDate: str = "2026-06-20"
+    sowingDate: Optional[str] = None
     soilType: str = "black"
     irrigationType: str = "rainfed"
     inputCostPerHa: float = 18000.0
@@ -38,8 +39,8 @@ DEFAULT_DEMO_FARM = {
     "lat": 18.2333,
     "lng": 76.7167,
     "areaHectares": 3.5,
-    "sowingDate": "2026-06-20",
-    "expectedHarvestDate": "2026-10-25",
+    "sowingDate": datetime.now().strftime("%Y-%m-%d"),
+    "expectedHarvestDate": (datetime.now() + timedelta(days=95)).strftime("%Y-%m-%d"),
     "soilType": "black",
     "irrigationType": "rainfed",
     "inputCostPerHa": 18000.0,
@@ -122,6 +123,8 @@ async def save_farm(farm: FarmModel, user: Optional[Dict[str, Any]] = Depends(ge
     farm_dict["userId"] = user_id
     if not farm_dict.get("id"):
         farm_dict["id"] = f"farm-{int(farm_dict.get('lat', 18) * 1000)}"
+    if farm_dict.get("sowingDate") in [None, "", "2026-06-20"]:
+        farm_dict["sowingDate"] = datetime.now().strftime("%Y-%m-%d")
 
     # Dynamically compute agronomic yield and total harvest based on edits
     agronomy = calculate_agronomic_yield(

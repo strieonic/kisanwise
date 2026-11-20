@@ -46,7 +46,10 @@ export const FarmView: React.FC<FarmViewProps> = ({
   const cropKey = (farm?.crop || 'soybean').toLowerCase();
   const soilKey = (farm?.soilType || 'black').toLowerCase();
   const irrigKey = (farm?.irrigationType || 'rainfed').toLowerCase();
-  const sowingDate = farm?.sowingDate || '2026-06-20';
+  
+  // Sowing date defaults to present date unless explicitly edited
+  const todayStr = new Date().toISOString().split('T')[0];
+  const sowingDate = (farm?.sowingDate && farm.sowingDate !== '2026-06-20') ? farm.sowingDate : todayStr;
   const yieldPerHa = farm?.expectedYieldQPerHa || 19.5;
   const totalHarvest = farm?.totalHarvestQ || Math.round(area * yieldPerHa * 100) / 100;
 
@@ -98,16 +101,20 @@ export const FarmView: React.FC<FarmViewProps> = ({
     setIsLocating(true);
     try {
       const geo = await detectLocationFromCoords(newLat, newLng);
-      const ndvi = calculateDynamicNdvi(newLat, newLng, farm?.soilType || geo.suggestedSoil, farm?.irrigationType || 'rainfed', farm?.crop || geo.suggestedCrop);
+      const ndvi = calculateDynamicNdvi(newLat, newLng, geo.suggestedSoil, geo.suggestedIrrigation, geo.suggestedCrop);
       
+      // Auto-adapt all farm parameters to the new geographic region
       await onUpdateFarm({
         lat: newLat,
         lng: newLng,
-        village: geo.village || farm?.village || 'Local Area',
-        district: geo.district || farm?.district || '',
-        state: geo.state || farm?.state || '',
-        crop: farm?.crop || geo.suggestedCrop,
-        soilType: farm?.soilType || geo.suggestedSoil,
+        village: geo.village || 'Local Area',
+        district: geo.district,
+        state: geo.state,
+        crop: geo.suggestedCrop,
+        commodity: geo.suggestedCrop,
+        soilType: geo.suggestedSoil,
+        irrigationType: geo.suggestedIrrigation,
+        sowingDate: (farm?.sowingDate && farm.sowingDate !== '2026-06-20') ? farm.sowingDate : todayStr,
         isConfigured: true,
         ndviValue: ndvi.ndvi,
         ndviStatus: ndvi.status
@@ -117,6 +124,7 @@ export const FarmView: React.FC<FarmViewProps> = ({
       await onUpdateFarm({
         lat: newLat,
         lng: newLng,
+        sowingDate: (farm?.sowingDate && farm.sowingDate !== '2026-06-20') ? farm.sowingDate : todayStr,
         isConfigured: true
       });
     } finally {

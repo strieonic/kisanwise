@@ -83,7 +83,7 @@ def generate_recommendations(
     yield_q_per_ha: Optional[float] = None,
     soil_type: str = "black",
     irrigation_type: str = "rainfed",
-    sowing_date: str = "2026-06-20",
+    sowing_date: Optional[str] = None,
     lat: float = 18.2333,
     lng: float = 76.7167,
     input_cost_total: Optional[float] = None
@@ -96,10 +96,11 @@ def generate_recommendations(
     effective_input_cost = input_cost_total if (input_cost_total and input_cost_total > 0) else round(area_hectares * 18000.0)
 
     # 2. Maturity & Sowing Timing Analysis
+    effective_sowing = sowing_date if (sowing_date and sowing_date != "2026-06-20") else datetime.now().strftime("%Y-%m-%d")
     try:
-        sown_dt = datetime.strptime(sowing_date, "%Y-%m-%d").date()
+        sown_dt = datetime.strptime(effective_sowing, "%Y-%m-%d").date()
     except Exception:
-        sown_dt = date(2026, 6, 20)
+        sown_dt = datetime.now().date()
 
     today = date(2026, 10, 8)  # Active Kharif harvest baseline date
     days_elapsed = max(1, (today - sown_dt).days)

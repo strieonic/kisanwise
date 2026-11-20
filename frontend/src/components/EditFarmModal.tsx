@@ -194,6 +194,7 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
 
   // New user vs configured farm check
   const isNewlyCreated = farm.isConfigured === false || (!farm.crop && !farm.district);
+  const todayStr = new Date().toISOString().split('T')[0];
 
   const [name, setName] = useState(farm.name || '');
   const [stateName, setStateName] = useState(farm.state || '');
@@ -203,7 +204,7 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
   const [areaHectares, setAreaHectares] = useState<number>(farm.areaHectares || 1.0);
   const [soilType, setSoilType] = useState(farm.soilType || (isNewlyCreated ? '' : 'black'));
   const [irrigationType, setIrrigationType] = useState(farm.irrigationType || (isNewlyCreated ? '' : 'rainfed'));
-  const [sowingDate, setSowingDate] = useState(farm.sowingDate || new Date().toISOString().split('T')[0]);
+  const [sowingDate, setSowingDate] = useState((farm.sowingDate && farm.sowingDate !== '2026-06-20') ? farm.sowingDate : todayStr);
   const [lat, setLat] = useState<number>(farm.lat || 18.2333);
   const [lng, setLng] = useState<number>(farm.lng || 76.7167);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -224,7 +225,7 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
       setAreaHectares(farm.areaHectares > 0 ? farm.areaHectares : 1.0);
       setSoilType(farm.soilType || (isNew ? 'black' : 'black'));
       setIrrigationType(farm.irrigationType || (isNew ? 'rainfed' : 'rainfed'));
-      setSowingDate(farm.sowingDate || new Date().toISOString().split('T')[0]);
+      setSowingDate((farm.sowingDate && farm.sowingDate !== '2026-06-20') ? farm.sowingDate : todayStr);
       setLat(farm.lat || 18.2333);
       setLng(farm.lng || 76.7167);
     }
@@ -276,8 +277,9 @@ export const EditFarmModal: React.FC<EditFarmModalProps> = ({
     setStateName(place.state);
     setLat(place.lat);
     setLng(place.lng);
-    if (!crop || crop === 'soybean') setCrop(place.suggestedCrop);
-    if (!soilType || soilType === 'black') setSoilType(place.suggestedSoil);
+    setCrop(place.suggestedCrop);
+    setSoilType(place.suggestedSoil);
+    setIrrigationType(place.suggestedIrrigation || 'rainfed');
     setShowSearchDrop(false);
     setModalSearchQuery(place.displayName);
   };
