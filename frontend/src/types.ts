@@ -26,6 +26,9 @@ export interface Farm {
   expectedYieldQPerHa?: number;
   totalHarvestQ?: number;
   fieldGeoJson?: any;
+  isConfigured?: boolean;
+  ndviValue?: number;
+  ndviStatus?: string;
 }
 
 export interface MandiItem {

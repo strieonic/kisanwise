@@ -10,12 +10,15 @@ import {
   CheckCircle,
   HelpCircle,
   Maximize2,
-  Crosshair
+  Crosshair,
+  Compass,
+  AlertCircle
 } from 'lucide-react';
 import { Farm } from '../types';
 import { Language, translations } from '../i18n';
 import { FieldMap } from '../components/FieldMap';
 import { EditFarmModal } from '../components/EditFarmModal';
+import { detectLocationFromCoords, calculateDynamicNdvi } from '../services/agroGeoEngine';
 
 interface FarmViewProps {
   farm: Farm | null;
@@ -31,19 +34,24 @@ export const FarmView: React.FC<FarmViewProps> = ({
   const t = translations[language];
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMapRelocateMode, setIsMapRelocateMode] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
+  const isConfigured = farm?.isConfigured ?? true;
   const lat = farm?.lat || 18.2333;
   const lng = farm?.lng || 76.7167;
   const area = farm?.areaHectares || 3.5;
-  const crop = farm?.crop ? farm.crop.charAt(0).toUpperCase() + farm.crop.slice(1) : 'Soybean';
-  const soil = farm?.soilType ? farm.soilType.replace(/_/g, ' ') : 'Black';
-  const irrig = farm?.irrigationType ? farm.irrigationType.replace(/_/g, ' ') : 'Rainfed';
+  const crop = farm?.crop ? farm.crop.charAt(0).toUpperCase() + farm.crop.slice(1) : (isConfigured ? 'Soybean' : 'Not Set');
+  const soil = farm?.soilType ? farm.soilType.replace(/_/g, ' ') : (isConfigured ? 'Black' : 'Not Set');
+  const irrig = farm?.irrigationType ? farm.irrigationType.replace(/_/g, ' ') : (isConfigured ? 'Rainfed' : 'Not Set');
   const cropKey = (farm?.crop || 'soybean').toLowerCase();
   const soilKey = (farm?.soilType || 'black').toLowerCase();
   const irrigKey = (farm?.irrigationType || 'rainfed').toLowerCase();
   const sowingDate = farm?.sowingDate || '2026-06-20';
   const yieldPerHa = farm?.expectedYieldQPerHa || 19.5;
   const totalHarvest = farm?.totalHarvestQ || Math.round(area * yieldPerHa * 100) / 100;
+
+  // Calculate dynamic agro-ecological NDVI for active location
+  const dynamicNdvi = calculateDynamicNdvi(lat, lng, soilKey, irrigKey, cropKey);
 
   const cropBaseMap: Record<string, number> = {
     paddy: 46.0,
@@ -85,22 +93,72 @@ export const FarmView: React.FC<FarmViewProps> = ({
     rainfed: 'Rainfed monsoon baseline'
   };
 
-  // Handle direct map click/drag location change
+  // Handle direct map click/drag location change with automatic geo-detection
   const handleMapLocationChange = async (newLat: number, newLng: number) => {
-    await onUpdateFarm({
-      lat: newLat,
-      lng: newLng
-    });
+    setIsLocating(true);
+    try {
+      const geo = await detectLocationFromCoords(newLat, newLng);
+      const ndvi = calculateDynamicNdvi(newLat, newLng, farm?.soilType || geo.suggestedSoil, farm?.irrigationType || 'rainfed', farm?.crop || geo.suggestedCrop);
+      
+      await onUpdateFarm({
+        lat: newLat,
+        lng: newLng,
+        village: geo.village || farm?.village || 'Local Area',
+        district: geo.district || farm?.district || '',
+        state: geo.state || farm?.state || '',
+        crop: farm?.crop || geo.suggestedCrop,
+        soilType: farm?.soilType || geo.suggestedSoil,
+        isConfigured: true,
+        ndviValue: ndvi.ndvi,
+        ndviStatus: ndvi.status
+      });
+    } catch (err) {
+      console.error('Location auto-detection error:', err);
+      await onUpdateFarm({
+        lat: newLat,
+        lng: newLng,
+        isConfigured: true
+      });
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   return (
     <div className="space-y-4 pb-20 animate-fade-in">
+      {/* New User Farm Setup Onboarding Alert if not configured */}
+      {!isConfigured && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 text-foreground flex items-start justify-between gap-3 shadow-xs">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-outfit font-bold text-sm text-amber-900">
+                {language === 'mr' ? 'आपली शेती नोंदणी करा' : language === 'hi' ? 'अपने खेत की जानकारी दर्ज करें' : 'Setup Your Farm'}
+              </h4>
+              <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                {language === 'mr' 
+                  ? 'नकाशावर आपला परिसर निवडा किंवा खालील बटण दाबून गाव, जिल्हा, पीक आणि क्षेत्रफळ सेट करा.'
+                  : language === 'hi'
+                  ? 'नक्शे पर अपना स्थान चुनें या नीचे बटन दबाकर जिला, फसल व जमीन का विवरण दर्ज करें।'
+                  : 'Select your farm location on the map or click below to configure your district, crop, and acreage.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-amber-500 text-white font-bold text-xs shrink-0 hover:bg-amber-600 transition-all shadow-xs cursor-pointer"
+          >
+            {language === 'mr' ? 'माहिती भरा' : language === 'hi' ? 'दर्ज करें' : 'Configure'}
+          </button>
+        </div>
+      )}
+
       {/* Top Header & Edit Action */}
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-outfit font-extrabold text-xl text-foreground">
-              {farm?.name || 'Patil Farm'}
+              {farm?.name || (isConfigured ? 'My Farm' : 'New Farm')}
             </h2>
             <button
               onClick={() => setIsEditModalOpen(true)}
@@ -114,14 +172,19 @@ export const FarmView: React.FC<FarmViewProps> = ({
           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
             <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
             <span className="truncate">
-              {farm?.village || 'Ausa'}, {farm?.district || 'Latur'}, {farm?.state || 'Maharashtra'}
+              {farm?.village ? `${farm.village}, ` : ''}{farm?.district ? `${farm.district}, ` : ''}{farm?.state || 'Select Location'}
             </span>
+            {isLocating && (
+              <span className="text-[10px] text-amber-600 font-semibold animate-pulse ml-1">
+                (Updating region...)
+              </span>
+            )}
           </p>
         </div>
 
         <div className="flex flex-col items-end gap-1">
           <span className="px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold">
-            {crop} (Kharif)
+            {crop} {crop !== 'Not Set' ? '(Kharif)' : ''}
           </span>
           <button
             onClick={() => setIsEditModalOpen(true)}
@@ -151,7 +214,7 @@ export const FarmView: React.FC<FarmViewProps> = ({
         </button>
       </div>
 
-      {/* Satellite Parcel Map */}
+      {/* Satellite Parcel Map with Location Search & Auto-Detection */}
       <FieldMap
         lat={lat}
         lng={lng}
@@ -174,10 +237,10 @@ export const FarmView: React.FC<FarmViewProps> = ({
             <Edit3 className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
           <p className="text-base font-extrabold font-outfit text-foreground tabular-nums">
-            {area} ha
+            {area > 0 ? `${area} ha` : '-- ha'}
           </p>
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            ({(area * 2.47).toFixed(1)} acres)
+            {area > 0 ? `(${(area * 2.47).toFixed(1)} acres)` : 'Set farm size'}
           </p>
         </button>
 
@@ -236,7 +299,7 @@ export const FarmView: React.FC<FarmViewProps> = ({
         </button>
       </div>
 
-      {/* Satellite NDVI Vigor Card */}
+      {/* Satellite Dynamic NDVI Vigor Card */}
       <div className="p-4 rounded-2xl bg-card border border-border shadow-xs">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -248,25 +311,39 @@ export const FarmView: React.FC<FarmViewProps> = ({
             </h3>
           </div>
           <span className="text-xs font-semibold text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
-            {t.farm.healthyZones}
+            {dynamicNdvi.healthyPercent}% {t.farm.healthyZones}
           </span>
         </div>
 
-        {/* Progress Bar for NDVI Spectrum */}
+        {/* Progress Bar for Dynamic NDVI Spectrum */}
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs font-semibold">
-            <span className="text-muted-foreground">Sentinel-2 Normalized Index</span>
-            <span className="text-emerald-700 font-bold tabular-nums">0.74 NDVI (Optimal)</span>
+            <span className="text-muted-foreground">Sentinel-2 Normalized Difference Index</span>
+            <span className="text-emerald-700 font-bold tabular-nums">
+              {dynamicNdvi.ndvi.toFixed(2)} NDVI ({dynamicNdvi.status})
+            </span>
           </div>
           <div className="w-full h-3 rounded-full bg-muted overflow-hidden flex">
-            <div className="bg-red-400 h-full w-[8%]" title="Stress zone" />
-            <div className="bg-amber-400 h-full w-[12%]" title="Moderate vigor" />
-            <div className="bg-emerald-500 h-full w-[80%]" title="Dense vegetative canopy" />
+            <div 
+              style={{ width: `${dynamicNdvi.stressedPercent}%` }} 
+              className="bg-rose-400 h-full transition-all duration-500" 
+              title={`Stress zone: ${dynamicNdvi.stressedPercent}%`} 
+            />
+            <div 
+              style={{ width: `${dynamicNdvi.moderatePercent}%` }} 
+              className="bg-amber-400 h-full transition-all duration-500" 
+              title={`Moderate canopy: ${dynamicNdvi.moderatePercent}%`} 
+            />
+            <div 
+              style={{ width: `${dynamicNdvi.healthyPercent}%` }} 
+              className="bg-emerald-500 h-full transition-all duration-500" 
+              title={`Dense healthy canopy: ${dynamicNdvi.healthyPercent}%`} 
+            />
           </div>
           <div className="flex justify-between text-[10px] text-muted-foreground">
             <span>Stressed (0.2)</span>
-            <span>Average (0.5)</span>
-            <span className="font-semibold text-emerald-700">Dense Canopy (0.8+)</span>
+            <span>Moderate (0.5)</span>
+            <span className="font-semibold text-emerald-700">Optimal Canopy (0.8+)</span>
           </div>
         </div>
       </div>

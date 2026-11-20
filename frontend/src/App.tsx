@@ -49,29 +49,55 @@ export const App: React.FC = () => {
   const loadInitialData = async (activeUser?: User | null) => {
     try {
       const targetUser = activeUser !== undefined ? activeUser : user;
+      const isDemoSession = targetUser?.isDemo ?? (!targetUser);
       
+      const defaultFarm: Farm = isDemoSession
+        ? {
+            id: 'demo-farm',
+            name: 'Patil Farm',
+            crop: 'soybean',
+            commodity: 'soybean',
+            state: 'Maharashtra',
+            district: 'Latur',
+            village: 'Ausa',
+            lat: 18.2333,
+            lng: 76.7167,
+            areaHectares: 3.5,
+            sowingDate: '2026-06-20',
+            soilType: 'black',
+            irrigationType: 'rainfed',
+            inputCostPerHa: 18000,
+            expectedYieldQPerHa: 19.8,
+            totalHarvestQ: 69.3,
+            isConfigured: true
+          }
+        : {
+            id: 'my-farm',
+            name: targetUser?.name ? `${targetUser.name}'s Farm` : 'My Farm',
+            crop: '',
+            commodity: '',
+            state: '',
+            district: '',
+            village: '',
+            lat: 18.2333,
+            lng: 76.7167,
+            areaHectares: 0,
+            sowingDate: new Date().toISOString().split('T')[0],
+            soilType: '',
+            irrigationType: '',
+            inputCostPerHa: 15000,
+            expectedYieldQPerHa: 0,
+            totalHarvestQ: 0,
+            isConfigured: false
+          };
+
       // 1. Get farm (backend handles demo vs real user based on auth token)
       const farmRes = await api.getFarm().catch(() => null);
-      const activeFarm = farmRes?.farm || {
-        id: 'demo-farm',
-        name: 'Patil Farm',
-        crop: 'soybean',
-        commodity: 'soybean',
-        state: 'Maharashtra',
-        district: 'Latur',
-        village: 'Ausa',
-        lat: 18.2333,
-        lng: 76.7167,
-        areaHectares: 3.5,
-        sowingDate: '2026-06-20',
-        soilType: 'black',
-        irrigationType: 'rainfed',
-        inputCostPerHa: 18000,
-        expectedYieldQPerHa: 19.8,
-        totalHarvestQ: 69.3
-      };
+      const activeFarm = farmRes?.farm || defaultFarm;
       setFarm(activeFarm);
-      setSelectedCommodity(activeFarm.crop || 'soybean');
+      if (activeFarm.crop) {
+        setSelectedCommodity(activeFarm.crop);
+      }
 
       // 2. Weather for farm coordinates
       const weatherRes = await api.getWeather(activeFarm.lat, activeFarm.lng).catch(() => null);
@@ -119,23 +145,45 @@ export const App: React.FC = () => {
 
   const handleUpdateFarm = async (updated: Partial<Farm>) => {
     try {
+      const isDemoSession = user?.isDemo ?? (!user);
+      const fallbackFarm: Farm = isDemoSession
+        ? {
+            id: 'demo-farm',
+            name: 'Patil Farm',
+            crop: 'soybean',
+            commodity: 'soybean',
+            state: 'Maharashtra',
+            district: 'Latur',
+            village: 'Ausa',
+            lat: 18.2333,
+            lng: 76.7167,
+            areaHectares: 3.5,
+            sowingDate: '2026-06-20',
+            soilType: 'black',
+            irrigationType: 'rainfed',
+            inputCostPerHa: 18000,
+            isConfigured: true
+          }
+        : {
+            id: 'my-farm',
+            name: user?.name ? `${user.name}'s Farm` : 'My Farm',
+            crop: '',
+            commodity: '',
+            state: '',
+            district: '',
+            village: '',
+            lat: 18.2333,
+            lng: 76.7167,
+            areaHectares: 0,
+            sowingDate: new Date().toISOString().split('T')[0],
+            soilType: '',
+            irrigationType: '',
+            inputCostPerHa: 15000,
+            isConfigured: false
+          };
+
       const merged: Farm = {
-        ...(farm || {
-          id: 'demo-farm',
-          name: 'Patil Farm',
-          crop: 'soybean',
-          commodity: 'soybean',
-          state: 'Maharashtra',
-          district: 'Latur',
-          village: 'Ausa',
-          lat: 18.2333,
-          lng: 76.7167,
-          areaHectares: 3.5,
-          sowingDate: '2026-06-20',
-          soilType: 'black',
-          irrigationType: 'rainfed',
-          inputCostPerHa: 18000
-        }),
+        ...(farm || fallbackFarm),
         ...updated
       };
 

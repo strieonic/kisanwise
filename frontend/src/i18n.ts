@@ -88,7 +88,7 @@ export interface Translations {
 export const translations: Record<Language, Translations> = {
   en: {
     appName: "KisanWise",
-    tagline: "Farm Decision Assistant",
+    tagline: "Crop Selling Decision Assistant",
     tabs: {
       dashboard: "Dashboard",
       farm: "My Farm",
@@ -172,7 +172,7 @@ export const translations: Record<Language, Translations> = {
   },
   mr: {
     appName: "किशनवाइज",
-    tagline: "स्मार्ट शेती सल्लागार",
+    tagline: "पीक विक्री निर्णय सहाय्यक",
     tabs: {
       dashboard: "डॅशबोर्ड",
       farm: "माझे शेत",
@@ -256,7 +256,7 @@ export const translations: Record<Language, Translations> = {
   },
   hi: {
     appName: "किसानवाइज",
-    tagline: "स्मार्ट कृषि सलाहकार",
+    tagline: "फसल बिक्री निर्णय सहायक",
     tabs: {
       dashboard: "डैशबोर्ड",
       farm: "मेरा खेत",

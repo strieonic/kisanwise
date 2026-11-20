@@ -24,6 +24,7 @@ class FarmModel(BaseModel):
     irrigationType: str = "rainfed"
     inputCostPerHa: float = 18000.0
     fieldGeoJson: Optional[Dict[str, Any]] = None
+    isConfigured: Optional[bool] = False
 
 DEFAULT_DEMO_FARM = {
     "id": "demo-farm-patil",
@@ -44,6 +45,7 @@ DEFAULT_DEMO_FARM = {
     "inputCostPerHa": 18000.0,
     "expectedYieldQPerHa": 19.8,
     "totalHarvestQ": 69.3,
+    "isConfigured": True,
     "fieldGeoJson": {
         "type": "Polygon",
         "coordinates": [
@@ -73,13 +75,30 @@ async def get_farm(user: Optional[Dict[str, Any]] = Depends(get_current_user)):
             if f.get("userId") == user_id:
                 return {"success": True, "farm": f}
 
-    # If this is an authenticated real farmer who doesn't have a farm yet, create their private farm
+    # If this is an authenticated real farmer who doesn't have a farm yet, initialize with empty profile
     if user and user_id != "demo-user-suresh":
         user_name = user.get("name", "Farmer")
-        new_farm = dict(DEFAULT_DEMO_FARM)
-        new_farm["id"] = f"farm-{user_id[:8]}"
-        new_farm["userId"] = user_id
-        new_farm["name"] = f"{user_name}'s Farm"
+        new_farm = {
+            "id": f"farm-{user_id[:8]}",
+            "userId": user_id,
+            "name": f"{user_name}'s Farm",
+            "crop": "",
+            "commodity": "",
+            "state": "",
+            "district": "",
+            "village": "",
+            "lat": 18.5204,
+            "lng": 73.8567,
+            "areaHectares": 0.0,
+            "sowingDate": "",
+            "expectedHarvestDate": "",
+            "soilType": "",
+            "irrigationType": "",
+            "inputCostPerHa": 0.0,
+            "expectedYieldQPerHa": 0.0,
+            "totalHarvestQ": 0.0,
+            "isConfigured": False
+        }
         if db_manager.is_connected and db_manager.db is not None:
             await db_manager.db.farms.insert_one(dict(new_farm))
             new_farm.pop("_id", None)
@@ -115,6 +134,7 @@ async def save_farm(farm: FarmModel, user: Optional[Dict[str, Any]] = Depends(ge
     
     farm_dict["expectedYieldQPerHa"] = yield_val
     farm_dict["totalHarvestQ"] = total_q
+    farm_dict["isConfigured"] = bool(farm_dict.get("crop") and farm_dict.get("district"))
 
     if db_manager.is_connected and db_manager.db is not None:
         await db_manager.db.farms.update_one(
